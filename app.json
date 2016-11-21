@@ -8,7 +8,21 @@
     },
 		"TORUS_TOKEN_SECRET": {
 			"description": "Token secret generated for Torus machine"
-		}
+		},
+    "TORUS_ORG": {
+      "description": "Organization name found in your .torus.json"
+    },
+    "TORUS_PROJECT": {
+      "description": "Project name found in your .torus.json"
+    },
+    "TORUS_ENVIRONMENT": {
+      "value": "heroku",
+      "description": "Customized environment name from Torus"
+    },
+    "TORUS_SERVICE": {
+      "value": "default",
+      "description": "Customized service name from Torus"
+    }
   },
   "buildpacks": [
     {
