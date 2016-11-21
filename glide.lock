@@ -1,0 +1,53 @@
+hash: 3193b30098e1975959b8fcc1f388b0a72930b0b68d5493b3a5c74238ec263ab2
+updated: 2016-11-20T20:11:57.139105257-04:00
+imports:
+- name: github.com/aymerick/raymond
+  version: a2232af10b53ef1ae5a767f5178db3a6c1dab655
+  subpackages:
+  - ast
+  - lexer
+  - parser
+- name: github.com/gin-gonic/gin
+  version: bb159f9260a262fccbdbd6f37f8575d1e7e6aaa0
+  subpackages:
+  - binding
+  - render
+- name: github.com/golang/protobuf
+  version: 2402d76f3d41f928c7902a765dfc872356dd3aad
+  subpackages:
+  - proto
+- name: github.com/google/go-github
+  version: d4f1b2d029be1730fd349ca929cc9c0da4a27007
+  subpackages:
+  - github
+- name: github.com/google/go-querystring
+  version: 9235644dd9e52eeae6fa48efd539fdc351a0af53
+  subpackages:
+  - query
+- name: github.com/manucorporat/sse
+  version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
+- name: github.com/robvdl/ginraymond
+  version: f452ae0c588a27a9ba3fde357187884a197e333f
+- name: golang.org/x/net
+  version: f315505cf3349909cdf013ea56690da34e96a451
+  subpackages:
+  - context
+- name: golang.org/x/oauth2
+  version: d5040cddfc0da40b408c9a1da4728662435176a9
+  subpackages:
+  - internal
+- name: google.golang.org/appengine
+  version: ca59ef35f409df61fa4a5f8290ff289b37eccfb8
+  subpackages:
+  - internal
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/remote_api
+  - internal/urlfetch
+  - urlfetch
+- name: gopkg.in/go-playground/validator.v8
+  version: c193cecd124b5cc722d7ee5538e945bdb3348435
+- name: gopkg.in/yaml.v2
+  version: e4d366fc3c7938e2958e662b4258c7a89e1f0e3e
+testImports: []

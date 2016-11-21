@@ -1,0 +1,13 @@
+{
+  "name": "Listbot",
+  "description": "Automatically add a repository-specific checklist to every pull request, failing the build until completed.",
+  "image": "heroku/go:1.6",
+  "env": {
+    "TORUS_TOKEN_ID": {
+      "description": "Token ID generated for Torus machine"
+    },
+		"TORUS_TOKEN_SECRET": {
+			"description": "Token secret generated for Torus machine"
+		}
+  }
+}
