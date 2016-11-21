@@ -1,1 +1,1 @@
-web: ./bin/listbot
+web: torus run ./bin/listbot

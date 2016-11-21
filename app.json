@@ -9,5 +9,13 @@
 		"TORUS_TOKEN_SECRET": {
 			"description": "Token secret generated for Torus machine"
 		}
-  }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/go"
+    },
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
 }

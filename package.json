@@ -1,0 +1,15 @@
+{
+  "name": "listbot",
+  "version": "1.0.0",
+  "description": "Automatically add a repository-specific checklist to every pull request, failing the build until completed.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeffandersen/listbot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jeffandersen/listbot/issues"
+  },
+  "dependencies": {
+    "torus-cli": "0.17.0"
+  }
+}
