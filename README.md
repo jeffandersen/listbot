@@ -2,9 +2,7 @@
 
 # listbot
 
-Automatically add a checklist to every Pull Request which is opened.
-
-The bot will set the build status to failure until the checklist has been completed.
+Automatically add a checklist (sourced from `.github/listbot.md`) to every Pull Request which is opened. As the checklist is updated the bot will change the build status depending on whether the checklist is completed.
 
 ![](./preview.gif)
 
