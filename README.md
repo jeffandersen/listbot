@@ -6,6 +6,8 @@ Automatically add a checklist to every Pull Request which is opened.
 
 The bot will set the build status to failure until the checklist has been completed.
 
+![](./preview.gif)
+
 ## Installation
 
 1. Generate a [personal access](https://github.com/settings/tokens) token from Github
