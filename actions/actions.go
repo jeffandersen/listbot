@@ -53,30 +53,33 @@ func HandleWebhook(c *gin.Context) {
 	buf.ReadFrom(c.Request.Body)
 	bodyJSON := buf.Bytes()
 
-	var event string
+	var err error
 
+	// Unmarshal comment event
 	var commentEvent github.IssueCommentEvent
-	var pullRequestEvent github.PullRequestEvent
-
 	cErr := json.Unmarshal(bodyJSON, &commentEvent)
 	if cErr == nil && commentEvent.Issue != nil {
-		event = CommentEvent
-	}
-	if event == "" {
-		pErr := json.Unmarshal(bodyJSON, &pullRequestEvent)
-		if pErr == nil && pullRequestEvent.PullRequest != nil {
-			event = NewPullRequestEvent
+		log.Print("comment event")
+		err = handleIssueComment(commentEvent)
+	} else {
+
+		// Unmarshal pull request event
+		var pullRequestEvent github.PullRequestEvent
+		prErr := json.Unmarshal(bodyJSON, &pullRequestEvent)
+		if prErr == nil && pullRequestEvent.PullRequest != nil {
+			log.Print("pull request event")
+			err = handleNewPullRequest(pullRequestEvent)
+		} else {
+
+			// Unmarshal push event
+			var pushEvent github.PushEvent
+			pErr := json.Unmarshal(bodyJSON, &pushEvent)
+			if pErr == nil {
+				log.Print("push event")
+				err = handleNewPush(pushEvent)
+			}
 		}
 	}
-
-	var err error
-	switch event {
-	case CommentEvent:
-		err = handleIssueComment(commentEvent)
-	case NewPullRequestEvent:
-		err = handleNewPullRequest(pullRequestEvent)
-	}
-
 	if err != nil {
 		log.Printf("error: %s", err.Error())
 		c.String(http.StatusInternalServerError, "Internal Server Error")
