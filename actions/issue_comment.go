@@ -52,7 +52,10 @@ func handleIssueCommentDeleted(event github.IssueCommentEvent) error {
 	owner := *event.Repo.Owner.Login
 	repo := *event.Repo.Name
 	number := *event.Issue.Number
+	return refreshPullStatus(owner, repo, number)
+}
 
+func refreshPullStatus(owner, repo string, number int) error {
 	comments, err := getAllPullComments(owner, repo, number)
 	if err != nil {
 		log.Print("failed to retrieve pull request comments: %s", err.Error())
@@ -60,18 +63,29 @@ func handleIssueCommentDeleted(event github.IssueCommentEvent) error {
 	}
 
 	count := 0
+	var target *github.IssueComment
 	for _, c := range comments {
 		if isListbotListComment(c) {
+			target = c
 			count++
 		}
 	}
 
 	// If no listbot comments are found, set status to successful
 	if count < 1 {
-		return setPullStatus(owner, repo, number, "success", *event.Issue.HTMLURL)
+		log.Print("status updated: no list")
+		return setPullStatus(owner, repo, number, "success", "")
 	}
 
-	return nil
+	// naively determine if items are left un-checked, setting the status
+	var state string
+	if HasCheckbox.MatchString(*target.Body) {
+		state = "failure"
+	} else {
+		state = "success"
+	}
+
+	return setPullStatus(owner, repo, number, state, *target.HTMLURL)
 }
 
 func setPullStatus(owner, repo string, number int, state, url string) error {
@@ -96,7 +110,7 @@ func setPullStatus(owner, repo string, number int, state, url string) error {
 	}
 	sha := *pr.Head.SHA
 
-	log.Print("set state for %s as %+v", sha, status)
+	log.Printf("set state for %s as %+v", sha, status)
 
 	// set the status for the pull request at the given sha
 	_, _, err = githubClient.Repositories.CreateStatus(owner, repo, sha, &status)
@@ -108,20 +122,24 @@ func setPullStatus(owner, repo string, number int, state, url string) error {
 	return nil
 }
 
-func isListbotListComment(c *github.PullRequestComment) bool {
+func isListbotListComment(c *github.IssueComment) bool {
 	return strings.Contains(*c.Body, CommentTag)
 }
 
-func getAllPullComments(owner, repo string, number int) ([]*github.PullRequestComment, error) {
-	opt := github.PullRequestListCommentsOptions{
+func getAllPullComments(owner, repo string, number int) ([]*github.IssueComment, error) {
+	opt := github.IssueListCommentsOptions{
 		ListOptions: github.ListOptions{
 			PerPage: 100,
 		},
 	}
 
-	var comments []*github.PullRequestComment
+	var comments []*github.IssueComment
 	for {
-		results, resp, err := githubClient.PullRequests.ListComments(owner, repo, number, &opt)
+		log.Printf("%s/%s #%d -- %+v\n", owner, repo, number, opt)
+		results, resp, err := githubClient.Issues.ListComments(owner, repo, number, &opt)
+		log.Printf("err: %+v\n", err)
+		log.Printf("resp: %+v\n", resp)
+		log.Printf("results: %+v\n", results)
 		if err != nil {
 			return nil, err
 		}

@@ -22,5 +22,5 @@ The bot will set the build status to failure until the checklist has been comple
 11. Add a new file to your repository at `.github/listbot.md`
 12. Add a new webhook at `https://github.com/[owner]/[repo]/settings/hooks/new`
  - Set the payload url to `[hostname]/webhook` where `[hostname]` is the deployed service
- - Select `Issue comment` and `Pull request` from "Let me select individual events"
+ - Select `Issue comment`, `Pull request` and `Push` from "Let me select individual events"
  - Mark it as active and save
