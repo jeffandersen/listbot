@@ -21,10 +21,16 @@ func handleIssueComment(event github.IssueCommentEvent) error {
 		return nil
 	}
 
-	var err error
+	owner := *event.Repo.Owner.Login
+	repo := *event.Repo.Name
+	comment, _, err := githubClient.Issues.GetComment(owner, repo, *event.Comment.ID)
+	if err != nil {
+		return err
+	}
+
 	switch *event.Action {
 	case "edited":
-		err = handleIssueCommentEdited(event)
+		err = handleIssueCommentEdited(event, *comment)
 	case "deleted":
 		err = handleIssueCommentDeleted(event)
 	}
@@ -32,11 +38,11 @@ func handleIssueComment(event github.IssueCommentEvent) error {
 	return err
 }
 
-func handleIssueCommentEdited(event github.IssueCommentEvent) error {
+func handleIssueCommentEdited(event github.IssueCommentEvent, comment github.IssueComment) error {
 	var state string
 
 	// naively determine if items are left un-checked, setting the status
-	if HasCheckbox.MatchString(*event.Comment.Body) {
+	if HasCheckbox.MatchString(strings.TrimSpace(*comment.Body)) {
 		state = "failure"
 	} else {
 		state = "success"
