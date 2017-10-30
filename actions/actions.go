@@ -2,6 +2,7 @@ package actions
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -13,22 +14,24 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// Available constants
 const (
+	CommentTag       = "<!-- listbot comment -->"
+	TemplateLocation = ".github/listbot.md"
+
 	CommentEvent        = "comment"
 	NewPullRequestEvent = "new_pull_request"
-	CommentTag          = "<!-- listbot comment -->"
 	StatusContext       = "listbot"
-	StatusSuccessText   = "Checklist complete"
-	StatusFailureText   = "Checklist incomplete"
 	StatusStateFailure  = "failure"
 	StatusStateSuccess  = "success"
-	TemplateLocation    = ".github/listbot.md"
+	StatusSuccessText   = "Checklist complete"
+	StatusFailureText   = "Checklist incomplete"
 )
 
+// HasCheckbox is a naive regex to determine if a blob contains a md checkbox
 var HasCheckbox = regexp.MustCompile(`\-\s\[\s\]`)
 
 var githubToken string
-var githubLogin string
 var githubClient *github.Client
 
 func init() {
@@ -49,6 +52,8 @@ func init() {
 
 // HandleWebhook identities the event type and responds to the request
 func HandleWebhook(c *gin.Context) {
+	ctx := context.Background()
+
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(c.Request.Body)
 	bodyJSON := buf.Bytes()
@@ -60,7 +65,7 @@ func HandleWebhook(c *gin.Context) {
 	cErr := json.Unmarshal(bodyJSON, &commentEvent)
 	if cErr == nil && commentEvent.Issue != nil {
 		log.Print("comment event")
-		err = handleIssueComment(commentEvent)
+		err = handleIssueComment(ctx, commentEvent)
 	} else {
 
 		// Unmarshal pull request event
@@ -68,7 +73,7 @@ func HandleWebhook(c *gin.Context) {
 		prErr := json.Unmarshal(bodyJSON, &pullRequestEvent)
 		if prErr == nil && pullRequestEvent.PullRequest != nil {
 			log.Print("pull request event")
-			err = handleNewPullRequest(pullRequestEvent)
+			err = handleNewPullRequest(ctx, pullRequestEvent)
 		} else {
 
 			// Unmarshal push event
@@ -76,7 +81,7 @@ func HandleWebhook(c *gin.Context) {
 			pErr := json.Unmarshal(bodyJSON, &pushEvent)
 			if pErr == nil {
 				log.Print("push event")
-				err = handleNewPush(pushEvent)
+				err = handleNewPush(ctx, pushEvent)
 			}
 		}
 	}

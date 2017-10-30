@@ -1,13 +1,14 @@
 package actions
 
 import (
+	"context"
 	"log"
 	"strings"
 
 	"github.com/google/go-github/github"
 )
 
-func handleNewPush(event github.PushEvent) error {
+func handleNewPush(ctx context.Context, event github.PushEvent) error {
 	if event.After == nil {
 		return nil
 	}
@@ -16,7 +17,7 @@ func handleNewPush(event github.PushEvent) error {
 	owner := strings.Split(fullname, "/")[0]
 	repo := strings.Split(fullname, "/")[1]
 
-	pulls, err := getAllPulls(owner, repo)
+	pulls, err := getAllPulls(ctx, owner, repo)
 	if err != nil {
 		log.Print("failed to retrieve pull requests")
 		return err
@@ -34,7 +35,7 @@ func handleNewPush(event github.PushEvent) error {
 		return nil
 	}
 
-	err = refreshPullStatus(owner, repo, *target.Number)
+	err = refreshPullStatus(ctx, owner, repo, *target.Number)
 	if err != nil {
 		log.Print("failed to set pull request status")
 		return err
@@ -43,7 +44,7 @@ func handleNewPush(event github.PushEvent) error {
 	return nil
 }
 
-func getAllPulls(owner, repo string) ([]*github.PullRequest, error) {
+func getAllPulls(ctx context.Context, owner, repo string) ([]*github.PullRequest, error) {
 	opt := github.PullRequestListOptions{
 		ListOptions: github.ListOptions{
 			PerPage: 100,
@@ -52,7 +53,7 @@ func getAllPulls(owner, repo string) ([]*github.PullRequest, error) {
 
 	var pulls []*github.PullRequest
 	for {
-		results, resp, err := githubClient.PullRequests.List(owner, repo, &opt)
+		results, resp, err := githubClient.PullRequests.List(ctx, owner, repo, &opt)
 		if err != nil {
 			return nil, err
 		}

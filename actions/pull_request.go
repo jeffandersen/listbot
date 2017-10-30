@@ -1,13 +1,14 @@
 package actions
 
 import (
+	"context"
 	"errors"
 	"log"
 
 	"github.com/google/go-github/github"
 )
 
-func handleNewPullRequest(event github.PullRequestEvent) error {
+func handleNewPullRequest(ctx context.Context, event github.PullRequestEvent) error {
 	if *event.Action != "opened" {
 		return nil
 	}
@@ -15,7 +16,7 @@ func handleNewPullRequest(event github.PullRequestEvent) error {
 	owner := *event.Repo.Owner.Login
 	repo := *event.Repo.Name
 	filename := TemplateLocation
-	file, _, _, err := githubClient.Repositories.GetContents(owner, repo, filename, nil)
+	file, _, _, err := githubClient.Repositories.GetContents(ctx, owner, repo, filename, nil)
 	if err != nil {
 		log.Print("could not retrieve checklist template")
 		return err
@@ -38,7 +39,7 @@ func handleNewPullRequest(event github.PullRequestEvent) error {
 		Body: &contents,
 	}
 
-	comment, _, err := githubClient.Issues.CreateComment(owner, repo, number, &body)
+	comment, _, err := githubClient.Issues.CreateComment(ctx, owner, repo, number, &body)
 	if err != nil {
 		log.Print("failed to post checklist template")
 		return err
@@ -48,7 +49,7 @@ func handleNewPullRequest(event github.PullRequestEvent) error {
 		return errors.New("unknown comment URL")
 	}
 
-	err = setPullStatus(owner, repo, number, "failure", *comment.HTMLURL)
+	err = setPullStatus(ctx, owner, repo, number, "failure", *comment.HTMLURL)
 	if err != nil {
 		log.Print("failed to set pull request status")
 		return err

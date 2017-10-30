@@ -1,13 +1,14 @@
 package actions
 
 import (
+	"context"
 	"log"
 	"strings"
 
 	"github.com/google/go-github/github"
 )
 
-func handleIssueComment(event github.IssueCommentEvent) error {
+func handleIssueComment(ctx context.Context, event github.IssueCommentEvent) error {
 	// if the issue or comment are nil, ignore it
 	if event.Issue == nil || event.Comment == nil {
 		return nil
@@ -23,22 +24,22 @@ func handleIssueComment(event github.IssueCommentEvent) error {
 
 	owner := *event.Repo.Owner.Login
 	repo := *event.Repo.Name
-	comment, _, err := githubClient.Issues.GetComment(owner, repo, *event.Comment.ID)
+	comment, _, err := githubClient.Issues.GetComment(ctx, owner, repo, *event.Comment.ID)
 	if err != nil {
 		return err
 	}
 
 	switch *event.Action {
 	case "edited":
-		err = handleIssueCommentEdited(event, *comment)
+		err = handleIssueCommentEdited(ctx, event, *comment)
 	case "deleted":
-		err = handleIssueCommentDeleted(event)
+		err = handleIssueCommentDeleted(ctx, event)
 	}
 
 	return err
 }
 
-func handleIssueCommentEdited(event github.IssueCommentEvent, comment github.IssueComment) error {
+func handleIssueCommentEdited(ctx context.Context, event github.IssueCommentEvent, comment github.IssueComment) error {
 	var state string
 
 	// naively determine if items are left un-checked, setting the status
@@ -51,20 +52,20 @@ func handleIssueCommentEdited(event github.IssueCommentEvent, comment github.Iss
 	owner := *event.Repo.Owner.Login
 	repo := *event.Repo.Name
 	number := *event.Issue.Number
-	return setPullStatus(owner, repo, number, state, *event.Comment.HTMLURL)
+	return setPullStatus(ctx, owner, repo, number, state, *event.Comment.HTMLURL)
 }
 
-func handleIssueCommentDeleted(event github.IssueCommentEvent) error {
+func handleIssueCommentDeleted(ctx context.Context, event github.IssueCommentEvent) error {
 	owner := *event.Repo.Owner.Login
 	repo := *event.Repo.Name
 	number := *event.Issue.Number
-	return refreshPullStatus(owner, repo, number)
+	return refreshPullStatus(ctx, owner, repo, number)
 }
 
-func refreshPullStatus(owner, repo string, number int) error {
-	comments, err := getAllPullComments(owner, repo, number)
+func refreshPullStatus(ctx context.Context, owner, repo string, number int) error {
+	comments, err := getAllPullComments(ctx, owner, repo, number)
 	if err != nil {
-		log.Print("failed to retrieve pull request comments: %s", err.Error())
+		log.Printf("failed to retrieve pull request comments: %s", err.Error())
 		return err
 	}
 
@@ -80,7 +81,7 @@ func refreshPullStatus(owner, repo string, number int) error {
 	// If no listbot comments are found, set status to successful
 	if count < 1 {
 		log.Print("status updated: no list")
-		return setPullStatus(owner, repo, number, "success", "")
+		return setPullStatus(ctx, owner, repo, number, "success", "")
 	}
 
 	// naively determine if items are left un-checked, setting the status
@@ -91,10 +92,10 @@ func refreshPullStatus(owner, repo string, number int) error {
 		state = "success"
 	}
 
-	return setPullStatus(owner, repo, number, state, *target.HTMLURL)
+	return setPullStatus(ctx, owner, repo, number, state, *target.HTMLURL)
 }
 
-func setPullStatus(owner, repo string, number int, state, url string) error {
+func setPullStatus(ctx context.Context, owner, repo string, number int, state, url string) error {
 	status := github.RepoStatus{
 		TargetURL: &url, //event.Comment.HTMLURL, // link the checklist as details
 		Context:   addrStr(StatusContext),
@@ -109,7 +110,7 @@ func setPullStatus(owner, repo string, number int, state, url string) error {
 	}
 
 	// identify the pull request sha
-	pr, _, err := githubClient.PullRequests.Get(owner, repo, number)
+	pr, _, err := githubClient.PullRequests.Get(ctx, owner, repo, number)
 	if err != nil {
 		log.Printf("failed to retrieve pull request: %s", err.Error())
 		return err
@@ -119,7 +120,7 @@ func setPullStatus(owner, repo string, number int, state, url string) error {
 	log.Printf("set state for %s as %+v", sha, status)
 
 	// set the status for the pull request at the given sha
-	_, _, err = githubClient.Repositories.CreateStatus(owner, repo, sha, &status)
+	_, _, err = githubClient.Repositories.CreateStatus(ctx, owner, repo, sha, &status)
 	if err != nil {
 		log.Printf("failed to update status for ref: %s", err.Error())
 		return err
@@ -132,7 +133,7 @@ func isListbotListComment(c *github.IssueComment) bool {
 	return strings.Contains(*c.Body, CommentTag)
 }
 
-func getAllPullComments(owner, repo string, number int) ([]*github.IssueComment, error) {
+func getAllPullComments(ctx context.Context, owner, repo string, number int) ([]*github.IssueComment, error) {
 	opt := github.IssueListCommentsOptions{
 		ListOptions: github.ListOptions{
 			PerPage: 100,
@@ -142,7 +143,7 @@ func getAllPullComments(owner, repo string, number int) ([]*github.IssueComment,
 	var comments []*github.IssueComment
 	for {
 		log.Printf("%s/%s #%d -- %+v\n", owner, repo, number, opt)
-		results, resp, err := githubClient.Issues.ListComments(owner, repo, number, &opt)
+		results, resp, err := githubClient.Issues.ListComments(ctx, owner, repo, number, &opt)
 		log.Printf("err: %+v\n", err)
 		log.Printf("resp: %+v\n", resp)
 		log.Printf("results: %+v\n", results)

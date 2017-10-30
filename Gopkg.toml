@@ -1,0 +1,16 @@
+required=[
+  "github.com/golang/lint/golint",
+  "github.com/client9/misspell/cmd/misspell",
+  "github.com/gordonklaus/ineffassign",
+  "github.com/tsenart/deadcode",
+  "github.com/alecthomas/gometalinter",
+]
+
+[[constraint]]
+  name = "github.com/gin-gonic/gin"
+
+[[constraint]]
+  name = "github.com/google/go-github"
+
+[[constraint]]
+  name = "golang.org/x/oauth2"
