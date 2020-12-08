@@ -10,6 +10,6 @@
     "url": "https://github.com/jeffandersen/listbot/issues"
   },
   "dependencies": {
-    "torus-cli": "0.17.0"
+    "torus-cli": "0.31.0"
   }
 }
